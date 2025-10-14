@@ -2,22 +2,23 @@
 // @name         FAB Free Personal Licensed Asset Collector (Paged Scroll + Manual Trigger)
 // @namespace    http://tampermonkey.net/
 // @copyright    2025, MrTheoW (https://github.com/MrTheoW)
-// @version      1.0
-// @description  Scrolls down up to 5 times, scans for claimable assets and claims them using the Personal License. (Not compatible with Firefox)
+// @version      1.1
+// @description  (Not compatible with Firefox) Automates the hassle of getting the free personal licensed Assets from fab.com using TemperMonkey
 // @match        https://www.fab.com/search?sort_by=price&licenses=personal&is_free=1*
 // @license      MIT
 // @run-at       document-end
 // @grant        none
 // @author       Theo Willemse
-// @description  Automates the hassle of getting the free personal licensed Assets from fab.com using TemperMonkey
-// @downloadURL  https://github.com/MrTheoW/FAB-Free-Personal-Licensed-Asset-Collector
 // ==/UserScript==
 
 (function() {
   'use strict';
 
+  // CONFIGURATION: number of scrolls per batch
+  const SCROLL_TIMES = 5;  // adjust this as needed
+
   // Scroll down up to maxTimes times, then resolve
-  async function scrollPage(maxTimes = 5) {
+  async function scrollPage(maxTimes) {
     let lastHeight = document.body.scrollHeight;
     let count = 0;
     while (count < maxTimes) {
@@ -33,8 +34,8 @@
   // Claim all loaded free personal items with per-item progress
   async function claimBatch() {
     triggerBtn.textContent = 'Loading new batch...';
-    console.log('🔄 Scrolling for new items…');
-    await scrollPage(5);
+    console.log(`🔄 Scrolling up to ${SCROLL_TIMES} times for new items…`);
+    await scrollPage(SCROLL_TIMES);
     console.log('✅ Scrolling complete.');
 
     const buttons = Array.from(
