@@ -2,9 +2,10 @@
 // @name         FAB Free Personal Licensed Asset Collector (Paged Scroll + Manual Trigger)
 // @namespace    http://tampermonkey.net/
 // @copyright    2025, MrTheoW (https://github.com/MrTheoW)
-// @version      1.2
+// @version      1.3
 // @description  (Not compatible with Firefox) Automates the hassle of getting the free personal licensed Assets from fab.com using TemperMonkey
 // @match        https://www.fab.com/search?sort_by=price&licenses=personal&is_free=1*
+// @match        https://www.fab.com/*
 // @license      MIT
 // @run-at       document-end
 // @grant        none
@@ -14,10 +15,11 @@
 (function() {
   'use strict';
 
-  // CONFIGURATION: number of scrolls per batch
+  // CONFIGURATION
+  const CLAIM_PAGE = 'https://www.fab.com/search?sort_by=price&licenses=personal&is_free=1'; // When changing this, Also change the matching @match section above.
   const SCROLL_TIMES = 5;
 
-  // Add pulsing brightness CSS
+  // Insert pulsing brightness CSS
   const style = document.createElement('style');
   style.textContent = `
     @keyframes pulseBrightness {
@@ -31,7 +33,33 @@
   `;
   document.head.appendChild(style);
 
-  // Scroll down up to maxTimes times, then resolve
+  let triggerBtn;
+
+  function createNavButton() {
+    triggerBtn = document.createElement('button');
+    triggerBtn.id = 'fab-trigger-btn';
+    triggerBtn.textContent = 'Go to Claim Page';
+    triggerBtn.style.cssText = `
+      position: fixed;
+      top: 2cm;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10000;
+      padding: 8px 14px;
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+    `;
+    triggerBtn.addEventListener('click', () => {
+      window.location.href = CLAIM_PAGE;
+    });
+    document.body.appendChild(triggerBtn);
+  }
+
+  // Scroll function
   async function scrollPage(maxTimes) {
     let lastHeight = document.body.scrollHeight;
     let count = 0;
@@ -45,7 +73,7 @@
     }
   }
 
-  // Claim all loaded free personal items with per-item progress
+  // Claim batch
   async function claimBatch() {
     triggerBtn.classList.remove('idle');
     triggerBtn.textContent = 'Loading new batch...';
@@ -98,11 +126,7 @@
     console.log("✅ Batch complete. Click again for next batch.");
   }
 
-  let triggerBtn;
-
-  // Create the manual trigger button
-  function createTriggerButton() {
-    if (triggerBtn) return;
+  function createClaimButton() {
     triggerBtn = document.createElement('button');
     triggerBtn.id = 'fab-trigger-btn';
     triggerBtn.textContent = 'Get all Free / Unclaimed assets';
@@ -121,14 +145,17 @@
       font-size: 14px;
       cursor: pointer;
     `;
-    triggerBtn.addEventListener('click', () => {
-      claimBatch();
-    });
+    triggerBtn.addEventListener('click', claimBatch);
     document.body.appendChild(triggerBtn);
-    console.log('[FAB Script] Trigger button added.');
   }
 
   window.addEventListener('load', () => {
-    setTimeout(createTriggerButton, 1000);
+    setTimeout(() => {
+      if (location.href.startsWith(CLAIM_PAGE)) {
+        createClaimButton();
+      } else {
+        createNavButton();
+      }
+    }, 1000);
   });
 })();
